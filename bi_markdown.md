@@ -302,7 +302,7 @@ for(i in 1:ncol(df)){
 ##     58.731.136
 ```
 
-It seems values for response-related variables can be fixed so that the values are not too long and reflect, for arguments_for and argements_against columns, 
+It seems values of response-related variables can be fixed so that the values are not too long and reflect, for arguments_for and argements_against columns, 
 the fact that those are based on multiple choices of opinions.
 
 ### Preprecessing
@@ -397,7 +397,7 @@ df$effect = df$effect %>% sapply(function(x){
 ```
 
 #### arguments_for and arguments_against
-For arguments_for and arguments_against, since the values are based on a multiple choice with each of the chosen options separated by the character "|", columns for each option can be created so that for a respondent, a cell in a column corresponding to one of the choice options takes 1 if that option is checked and 0 otherwise.
+For arguments_for and arguments_against, since the values are based on a multiple choice with each of the chosen options separated by the character "|", columns for each option can be created so that for each of the respondents, a cell in a column corresponding to one of the choice options takes 1 if that option is checked and 0 otherwise.
 
 ```r
 ###arguments_for###
@@ -427,7 +427,7 @@ df = df[setdiff(colnames(df), c("arguments_for", "arguments_against"))]
 For factor variables with more than 2 levels, levels can be possibly reordered.
 
 #### Create country column
-Since there is only variable for country code, creating a culumn for the country name based on the code could help in making visualization clear in meaning.
+Regarding the country, since there is only a variable for country code, creating a culumn for the country name based on the code could help in making visualization clear in meaning.
 
 ```r
 df$country_code %>% unique()
@@ -456,7 +456,7 @@ df$country = sapply(df$country_code, function(x)
   as.factor()
 ```
 
-In addition to this, countries can be divided based region,
+In addition to this, countries can be divided based on region.
 
 ```r
 map_code_region = list(
@@ -696,7 +696,7 @@ against_plots[[2]]
 
 ![](bi_markdown_files/figure-html/unnamed-chunk-24-2.png)<!-- -->
 
-From the above plots, it can be seen that for vast majority of people, there is at least one reason to be against BI in the answer choices.
+From the above plots, it can be seen that for vast majority of people, there is at least one reason for being against BI in the answer choices.
 
 ### Effect
 
@@ -751,7 +751,7 @@ bar_prop_generator("awareness", "dem_education_level", "awareness vs education l
 
 ![](bi_markdown_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
-It seems the trend is not that different, and so whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness.
+It seems the trend seems overall not that different, and that whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness. For urban resiednts, however, respondents from urban areas with "no" education level are more likely to not have heard about BI than the same type of respondents from rural areas. 
 
 ##### plot vs age group
 
@@ -764,9 +764,7 @@ bar_prop_generator("awareness", "age_group", "awareness vs age group")
 Slightly, people belonging to older age groups seem to be more knowledgeable in BI.
 
 #### Modelling
-Since the level of awareness can be considered an ordered categorical variable, a continuation logit or a cumulative logit model can be suitable. In this project, 
-
-The coefficients of these models can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term.
+Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, AIC can be used as the metric.
 
 ##### Multinomial logit model
 
@@ -783,97 +781,15 @@ explanatory_vars = c("age_group", "region", "gender", "rural",
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 output_var = "awareness"
 
+#Prop odds
 mod_po = polr(reg_formula_generator(output_var, explanatory_vars),
            data=df, Hess=TRUE)
-mod_mr = multinom(reg_formula_generator(output_var, explanatory_vars),
-           data=df)
-```
 
-```
-## # weights:  68 (48 variable)
-## initial  value 13376.354290 
-## iter  10 value 12859.018833
-## iter  20 value 12774.621206
-## iter  30 value 12693.843508
-## iter  40 value 12665.337162
-## iter  50 value 12660.540073
-## final  value 12660.341325 
-## converged
-```
-
-```r
-mod_po
-```
-
-```
-## Call:
-## polr(formula = reg_formula_generator(output_var, explanatory_vars), 
-##     data = df, Hess = TRUE)
-## 
-## Coefficients:
-##            age_group26_39            age_group40_65             regionEastern              regionNordic        regionSoutheastern            regionSouthern             regionWestern                gendermale                ruralurban     dem_education_levelno    dem_education_levellow dem_education_levelmedium   dem_education_levelhigh      dem_full_time_jobyes       dem_has_childrenyes 
-##                0.10632110                0.19480160                0.45825605               -0.20516612                0.53434834                0.46722992                0.16779195                0.27052400                0.02948241               -0.07624412                0.10252179                0.27009022                0.69273662                0.19169692                0.09001255 
-## 
-## Intercepts:
-##               never_heard|heard_a_little   heard_a_little|know_something_about_it know_something_about_it|fully_understand 
-##                               -0.6836021                                0.6064248                                2.1856631 
-## 
-## Residual Deviance: 25488.14 
-## AIC: 25524.14
-```
-
-```r
-step(mod_po)
-```
-
-```
-## Start:  AIC=25524.14
-## awareness ~ age_group + region + gender + rural + dem_education_level + 
-##     dem_full_time_job + dem_has_children
-## 
-##                       Df   AIC
-## - rural                1 25523
-## <none>                   25524
-## - dem_has_children     1 25527
-## - age_group            2 25533
-## - dem_full_time_job    1 25544
-## - gender               1 25572
-## - region               5 25648
-## - dem_education_level  4 25692
-## 
-## Step:  AIC=25522.65
-## awareness ~ age_group + region + gender + dem_education_level + 
-##     dem_full_time_job + dem_has_children
-## 
-##                       Df   AIC
-## <none>                   25523
-## - dem_has_children     1 25525
-## - age_group            2 25531
-## - dem_full_time_job    1 25542
-## - gender               1 25571
-## - region               5 25650
-## - dem_education_level  4 25694
-```
-
-```
-## Call:
-## polr(formula = awareness ~ age_group + region + gender + dem_education_level + 
-##     dem_full_time_job + dem_has_children, data = df, Hess = TRUE)
-## 
-## Coefficients:
-##            age_group26_39            age_group40_65             regionEastern              regionNordic        regionSoutheastern            regionSouthern             regionWestern                gendermale     dem_education_levelno    dem_education_levellow dem_education_levelmedium   dem_education_levelhigh      dem_full_time_jobyes       dem_has_childrenyes 
-##                0.10653435                0.19405030                0.46243495               -0.20284146                0.53867738                0.47028541                0.16693622                0.27142020               -0.07736567                0.10237066                0.27143436                0.69610008                0.19271721                0.08957058 
-## 
-## Intercepts:
-##               never_heard|heard_a_little   heard_a_little|know_something_about_it know_something_about_it|fully_understand 
-##                               -0.7014801                                0.5886110                                2.1678607 
-## 
-## Residual Deviance: 25488.65 
-## AIC: 25522.65
+#Non-prop odds
 ```
 
 
-Since the goal is to see what factors are related to the level of awareness, one way to infer is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered.
+Since the goal is to see what factors are related to the level of awareness, another way to infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered.
 
 ```r
 library(randomForest)
@@ -913,29 +829,16 @@ rf$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   64.18520
-## region                     120.90104
-## gender                      39.15999
-## rural                       38.90435
-## dem_education_level        117.83886
-## dem_full_time_job           39.46621
-## dem_has_children            35.85924
+## age_group                   64.07740
+## region                     120.76021
+## gender                      39.05035
+## rural                       38.58789
+## dem_education_level        118.69451
+## dem_full_time_job           39.48982
+## dem_has_children            35.98912
 ```
 
-```r
-table(predict(rf), df$awareness)
-```
-
-```
-##                          
-##                           never_heard heard_a_little know_something_about_it fully_understand
-##   never_heard                     124             84                      87               68
-##   heard_a_little                  137            201                     200              112
-##   know_something_about_it        1237           1899                    2845             1887
-##   fully_understand                 68            121                     257              322
-```
-
-
+Based on the importance measures above, education level and region are related to the level of awareness.
 
 ### 2. How notion on the effects of BI is associated with social status
 #### Graphical Analysis
@@ -986,24 +889,6 @@ mod_effect
 ## AIC: 36939.49
 ```
 
-```r
-table(df$effect, predict(mod_effect))
-```
-
-```
-##                                                  
-##                                                   A basic income would not affect my work choices do more volunteering work gain additional skills look for a different job None of the above spend more time with my family stop working work as a freelancer work less
-##   A basic income would not affect my work choices                                            3171                         0                      0                        0               147                             31            0                    0         0
-##   do more volunteering work                                                                   550                         0                      0                        0                60                              5            0                    0         0
-##   gain additional skills                                                                      886                         0                      0                        0                72                             12            0                    0         0
-##   look for a different job                                                                    577                         0                      0                        0                55                              8            0                    0         0
-##   None of the above                                                                          1011                         0                      0                        0               195                             21            0                    0         0
-##   spend more time with my family                                                             1263                         0                      0                        0               102                             22            0                    0         0
-##   stop working                                                                                332                         0                      0                        0                31                              4            0                    0         0
-##   work as a freelancer                                                                        440                         0                      0                        0                22                              3            0                    0         0
-##   work less                                                                                   569                         0                      0                        0                51                              9            0                    0         0
-```
-
 
 
 ```r
@@ -1011,11 +896,18 @@ explanatory_vars = c("age_group", "region", "gender", "rural",
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 library(randomForest())
 rf_effect = randomForest(x= df[explanatory_vars], y=df$effect, ntree = 1000)
-rf_effect$importance[order(rf_effect$importance, decreasing = TRUE)]
+rf_effect$importance
 ```
 
 ```
-## [1] 111.78192 110.43843  74.52863  43.39325  39.71195  39.37892  38.53648
+##                     MeanDecreaseGini
+## age_group                   72.57135
+## region                     111.74339
+## gender                      42.92848
+## rural                       39.52295
+## dem_education_level        108.75215
+## dem_full_time_job           38.56703
+## dem_has_children            38.39276
 ```
 
 ### 3. Whether there is an association between awareness and whether a person would vote for BI
@@ -1025,7 +917,7 @@ rf_effect$importance[order(rf_effect$importance, decreasing = TRUE)]
 bar_prop_generator("vote", "awareness", "vote vs awareness")
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-37-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
 
 The above plot shows that the more knowledge one has about BI, the more likely he would vote for BI. It cna be inferred from the above plot that the vote and awareness are not independent or homogeneous, let's do Chi square test for independence
 
@@ -1059,7 +951,7 @@ table_awareness_vote = table(df$awareness, df$vote)
 CA(table_awareness_vote)
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-39-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-38-1.png)<!-- -->
 
 ```
 ## **Results of the Correspondence Analysis (CA)**
@@ -1096,7 +988,7 @@ Based on the factor map, it can be inferred that the amount of knowledge on BI i
 bar_prop_generator("effect", "awareness", "vote vs awareness")
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
 
 It can be seen that those who says they understand BI tend to have the opinion that BI would not affect their work choices. Based on this observations, people knowledgeable about BI might tend to be more optimistic about the BI's effects.
 
@@ -1122,7 +1014,7 @@ table_awareness_effect = table(df$effect, df$awareness)
 CA(table_awareness_effect)
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
 
 ```
 ## **Results of the Correspondence Analysis (CA)**
@@ -1146,10 +1038,10 @@ CA(table_awareness_effect)
 ```
 
 ### 5. What are the possible reasons for a respondent to not vote for BI
-The columns for the reasons for being for or against the BI along with the variable vote.
-In order to simplify analysis, the levels for vote can be collapsed into two levels, "Yes", which includes the levels "yes" and "prob_yes" in the original formulation, and "No", which includes "no" and "prob_no" in the original vote variable.
+The columns for the reasons for being for/against the BI along with the variable vote.
+In order to simplify analysis, the levels for vote can be collapsed into two levels, "Yes", which includes the levels "yes" and "prob_yes" in the original formulation, and "No", which includes "no" and "prob_no".
 
-Since the goal is to see what factors make a person vote for or against BI, not to make a model for precise predictions, the rows with the label for the vote "no_vote" can be discarded
+Since the goal is to see what factors possibly would make a person vote for or against BI, not to make a model for precise predictions, the rows with the label for the vote "no_vote" can be discarded
 
 There can be loss of information by doing the above things. However, this leads to the reduction of number of the levels down to 2, which then enables us to fit a binary logistic regression, in which the interpretation of coefficients is much simpler than when there are more than 2 levels.
 

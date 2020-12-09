@@ -179,7 +179,7 @@ for(i in 1:ncol(df)){
 }
 ```
 
-It seems values for response-related variables can be fixed so that the values are not too long and reflect, for arguments_for and argements_against columns, 
+It seems values of response-related variables can be fixed so that the values are not too long and reflect, for arguments_for and argements_against columns, 
 the fact that those are based on multiple choices of opinions.
 
 ### Preprecessing
@@ -240,7 +240,7 @@ df$effect = df$effect %>% sapply(function(x){
 ```
 
 #### arguments_for and arguments_against
-For arguments_for and arguments_against, since the values are based on a multiple choice with each of the chosen options separated by the character "|", columns for each option can be created so that for a respondent, a cell in a column corresponding to one of the choice options takes 1 if that option is checked and 0 otherwise.
+For arguments_for and arguments_against, since the values are based on a multiple choice with each of the chosen options separated by the character "|", columns for each option can be created so that for each of the respondents, a cell in a column corresponding to one of the choice options takes 1 if that option is checked and 0 otherwise.
 ```{r}
 ###arguments_for###
 arguments_for_unique = df$arguments_for %>% 
@@ -268,7 +268,7 @@ df = df[setdiff(colnames(df), c("arguments_for", "arguments_against"))]
 For factor variables with more than 2 levels, levels can be possibly reordered.
 
 #### Create country column
-Since there is only variable for country code, creating a culumn for the country name based on the code could help in making visualization clear in meaning.
+Regarding the country, since there is only a variable for country code, creating a culumn for the country name based on the code could help in making visualization clear in meaning.
 ```{r}
 df$country_code %>% unique()
 map_code_name = list(
@@ -288,7 +288,7 @@ df$country = sapply(df$country_code, function(x)
   as.factor()
 ```
 
-In addition to this, countries can be divided based region,
+In addition to this, countries can be divided based on region.
 ```{r}
 map_code_region = list(
   AT = "Central", BE = "Western", BG = "Southeastern",
@@ -390,7 +390,7 @@ against_plots[[1]]
 against_plots[[2]]
 ```
 
-From the above plots, it can be seen that for vast majority of people, there is at least one reason to be against BI in the answer choices.
+From the above plots, it can be seen that for vast majority of people, there is at least one reason for being against BI in the answer choices.
 
 ### Effect
 ```{r}
@@ -429,7 +429,7 @@ bar_prop_generator("awareness", "dem_education_level", "awareness vs education l
                    facet_col = "rural")
 ```
 
-It seems the trend is not that different, and so whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness.
+It seems the trend seems overall not that different, and that whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness. For urban resiednts, however, respondents from urban areas with "no" education level are more likely to not have heard about BI than the same type of respondents from rural areas. 
 
 ##### plot vs age group
 ```{r}
@@ -439,9 +439,7 @@ bar_prop_generator("awareness", "age_group", "awareness vs age group")
 Slightly, people belonging to older age groups seem to be more knowledgeable in BI.
 
 #### Modelling
-Since the level of awareness can be considered an ordered categorical variable, a continuation logit or a cumulative logit model can be suitable. In this project, 
-
-The coefficients of these models can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term.
+Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, AIC can be used as the metric.
 
 ##### Multinomial logit model
 ```{r}
@@ -457,27 +455,24 @@ explanatory_vars = c("age_group", "region", "gender", "rural",
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 output_var = "awareness"
 
+#Prop odds
 mod_po = polr(reg_formula_generator(output_var, explanatory_vars),
            data=df, Hess=TRUE)
-mod_mr = multinom(reg_formula_generator(output_var, explanatory_vars),
-           data=df)
 
-mod_po
-step(mod_po)
+#Non-prop odds
 ```
 
 
-Since the goal is to see what factors are related to the level of awareness, one way to infer is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered.
+Since the goal is to see what factors are related to the level of awareness, another way to infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered.
 ```{r}
 library(randomForest)
 explanatory_vars = c("age_group", "region", "gender", "rural", 
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 rf = randomForest::randomForest(x=df[explanatory_vars], y=df$awareness, ntree=5000)
 rf$importance
-table(predict(rf), df$awareness)
 ```
 
-
+Based on the importance measures above, education level and region are related to the level of awareness.
 
 ### 2. How notion on the effects of BI is associated with social status
 #### Graphical Analysis
@@ -499,9 +494,6 @@ mod_effect = multinom(effect ~ age_group + gender + rural + region + dem_educati
                       data=df, trace=FALSE)
 mod_effect
 ```
-```{r}
-table(df$effect, predict(mod_effect))
-```
 
 
 ```{r}
@@ -509,7 +501,7 @@ explanatory_vars = c("age_group", "region", "gender", "rural",
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 library(randomForest())
 rf_effect = randomForest(x= df[explanatory_vars], y=df$effect, ntree = 1000)
-rf_effect$importance[order(rf_effect$importance, decreasing = TRUE)]
+rf_effect$importance
 ```
 
 ### 3. Whether there is an association between awareness and whether a person would vote for BI
@@ -560,10 +552,10 @@ CA(table_awareness_effect)
 ```
 
 ### 5. What are the possible reasons for a respondent to not vote for BI
-The columns for the reasons for being for or against the BI along with the variable vote.
-In order to simplify analysis, the levels for vote can be collapsed into two levels, "Yes", which includes the levels "yes" and "prob_yes" in the original formulation, and "No", which includes "no" and "prob_no" in the original vote variable.
+The columns for the reasons for being for/against the BI along with the variable vote.
+In order to simplify analysis, the levels for vote can be collapsed into two levels, "Yes", which includes the levels "yes" and "prob_yes" in the original formulation, and "No", which includes "no" and "prob_no".
 
-Since the goal is to see what factors make a person vote for or against BI, not to make a model for precise predictions, the rows with the label for the vote "no_vote" can be discarded
+Since the goal is to see what factors possibly would make a person vote for or against BI, not to make a model for precise predictions, the rows with the label for the vote "no_vote" can be discarded
 
 There can be loss of information by doing the above things. However, this leads to the reduction of number of the levels down to 2, which then enables us to fit a binary logistic regression, in which the interpretation of coefficients is much simpler than when there are more than 2 levels.
 
