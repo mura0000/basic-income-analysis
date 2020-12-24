@@ -741,7 +741,7 @@ bar_prop_generator("awareness", "dem_education_level", "awareness vs education l
 
 ![](bi_markdown_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
-Despite slight differences, people who have a high education level on average are more knowledgeable in BI. Let's partition by whether the resident is rural or urban.
+Despite slight differences, people who have a high education level on average are more knowledgeable in BI. Let's partition by whether the resident is from a rural or urban area.
 
 
 ```r
@@ -751,7 +751,7 @@ bar_prop_generator("awareness", "dem_education_level", "awareness vs education l
 
 ![](bi_markdown_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
-It seems the trend seems overall not that different, and that whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness. For urban resiednts, however, respondents from urban areas with "no" education level are more likely to not have heard about BI than the same type of respondents from rural areas. 
+It seems the trend seems overall not that different, and that whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness. For urban resiednts, however, a respondent from an urban area with "no" education level are more likely to not have heard about BI than a same type of respondent from a rural area. 
 
 ##### plot vs age group
 
@@ -761,7 +761,7 @@ bar_prop_generator("awareness", "age_group", "awareness vs age group")
 
 ![](bi_markdown_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
 
-Slightly, people belonging to older age groups seem to be more knowledgeable in BI.
+Slightly, people belonging to older age groups seem to tend to be more knowledgeable in BI.
 
 #### Modelling
 Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, AIC can be used as the metric.
@@ -789,7 +789,7 @@ mod_po = polr(reg_formula_generator(output_var, explanatory_vars),
 ```
 
 
-Since the goal is to see what factors are related to the level of awareness, another way to infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered.
+Since the goal is to see what factors are related to the level of awareness, another way to infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered, based on the mean decrease in Gini coef.
 
 ```r
 library(randomForest)
@@ -829,16 +829,16 @@ rf$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   64.07740
-## region                     120.76021
-## gender                      39.05035
-## rural                       38.58789
-## dem_education_level        118.69451
-## dem_full_time_job           39.48982
-## dem_has_children            35.98912
+## age_group                   64.03918
+## region                     121.40638
+## gender                      39.21982
+## rural                       38.75536
+## dem_education_level        118.93772
+## dem_full_time_job           39.39088
+## dem_has_children            36.22627
 ```
 
-Based on the importance measures above, education level and region are related to the level of awareness.
+Based on the importance measures above, education level and region might be related to the level of awareness more than other variables in the dataset. 
 
 ### 2. How notion on the effects of BI is associated with social status
 #### Graphical Analysis
@@ -901,13 +901,13 @@ rf_effect$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   72.57135
-## region                     111.74339
-## gender                      42.92848
-## rural                       39.52295
-## dem_education_level        108.75215
-## dem_full_time_job           38.56703
-## dem_has_children            38.39276
+## age_group                   73.01763
+## region                     110.61747
+## gender                      43.27664
+## rural                       40.20600
+## dem_education_level        109.37243
+## dem_full_time_job           38.95282
+## dem_has_children            38.53826
 ```
 
 ### 3. Whether there is an association between awareness and whether a person would vote for BI
@@ -974,7 +974,7 @@ CA(table_awareness_vote)
 ## 12 "$call$marge.row" "weights of the rows"
 ```
 
-Based on the factor map, it can be inferred that the amount of knowledge on BI is positively correlated with whether a person supports BI.
+
 
 
 ```r
