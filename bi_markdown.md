@@ -39,6 +39,7 @@ library(MASS)
 library(nnet)
 library(scales)
 library(GGally)
+library(VGAM)
 ```
 
 ### Import data
@@ -325,7 +326,7 @@ Only education level has missing values. For now, let the missing values for thi
 df$dem_education_level = as.character(df$dem_education_level)
 df$dem_education_level[is.na(df$dem_education_level)] = "unknown"
 df$dem_education_level = factor(df$dem_education_level,
-                                   levels=c("unknown", "no", "low", "medium", "high"))
+                                   levels=c("unknown", "no", "low", "medium", "high"), ordered=TRUE)
 ```
 
 
@@ -349,7 +350,7 @@ df$awareness = df$awareness %>%
     else if(x=="I have heard just a little about it"){return("heard_a_little")}
     else{return("never_heard")}
   }) %>%
-  factor(levels=c("never_heard", "heard_a_little" , "know_something_about_it", "fully_understand" ))
+  factor(levels=c("never_heard", "heard_a_little" , "know_something_about_it", "fully_understand" ), ordered=TRUE)
 ```
 
 #### Vote
@@ -781,15 +782,164 @@ explanatory_vars = c("age_group", "region", "gender", "rural",
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 output_var = "awareness"
 
-#Prop odds
-mod_po = polr(reg_formula_generator(output_var, explanatory_vars),
-           data=df, Hess=TRUE)
+##Fit models##
+#prop odds
+mod_po = vglm(reg_formula_generator(output_var, explanatory_vars),
+     data=df, family=cumulative(parallel = TRUE))
 
-#Non-prop odds
+#non-prop-odds
+mod_npo = vglm(reg_formula_generator(output_var, explanatory_vars),
+     data=df, family=cumulative())
+
+summary(mod_po)
+```
+
+```
+## 
+## Call:
+## vglm(formula = reg_formula_generator(output_var, explanatory_vars), 
+##     family = cumulative(parallel = TRUE), data = df)
+## 
+## Coefficients: 
+##                         Estimate Std. Error z value Pr(>|z|)    
+## (Intercept):1         -8.814e-01  6.435e-02 -13.697  < 2e-16 ***
+## (Intercept):2          4.086e-01  6.325e-02   6.461 1.04e-10 ***
+## (Intercept):3          1.988e+00  6.638e-02  29.947  < 2e-16 ***
+## age_group26_39        -1.063e-01  5.728e-02  -1.856 0.063445 .  
+## age_group40_65        -1.948e-01  5.588e-02  -3.486 0.000490 ***
+## regionEastern         -4.583e-01  1.819e-01  -2.519 0.011763 *  
+## regionNordic           2.052e-01  9.607e-02   2.136 0.032712 *  
+## regionSoutheastern    -5.343e-01  6.988e-02  -7.646 2.07e-14 ***
+## regionSouthern        -4.672e-01  5.130e-02  -9.108  < 2e-16 ***
+## regionWestern         -1.678e-01  4.753e-02  -3.530 0.000416 ***
+## gendermale            -2.705e-01  3.816e-02  -7.089 1.35e-12 ***
+## ruralurban            -2.948e-02  4.158e-02  -0.709 0.478316    
+## dem_education_level.L -5.476e-01  6.095e-02  -8.986  < 2e-16 ***
+## dem_education_level.Q -2.637e-01  5.517e-02  -4.779 1.76e-06 ***
+## dem_education_level.C -4.105e-05  7.084e-02  -0.001 0.999538    
+## dem_education_level^4 -6.363e-02  5.943e-02  -1.071 0.284319    
+## dem_full_time_jobyes  -1.917e-01  4.133e-02  -4.638 3.52e-06 ***
+## dem_has_childrenyes   -9.002e-02  4.182e-02  -2.153 0.031343 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Names of linear predictors: logitlink(P[Y<=1]), logitlink(P[Y<=2]), logitlink(P[Y<=3])
+## 
+## Residual deviance: 25488.14 on 28929 degrees of freedom
+## 
+## Log-likelihood: -12744.07 on 28929 degrees of freedom
+## 
+## Number of Fisher scoring iterations: 4 
+## 
+## No Hauck-Donner effect found in any of the estimates
+## 
+## 
+## Exponentiated coefficients:
+##        age_group26_39        age_group40_65         regionEastern          regionNordic    regionSoutheastern        regionSouthern         regionWestern            gendermale            ruralurban dem_education_level.L dem_education_level.Q dem_education_level.C dem_education_level^4  dem_full_time_jobyes   dem_has_childrenyes 
+##             0.8991412             0.8230045             0.6323766             1.2277317             0.5860514             0.6267341             0.8455317             0.7629779             0.9709474             0.5783076             0.7682349             0.9999589             0.9383483             0.8255612             0.9139162
+```
+
+```r
+summary(mod_npo)
+```
+
+```
+## 
+## Call:
+## vglm(formula = reg_formula_generator(output_var, explanatory_vars), 
+##     family = cumulative(), data = df)
+## 
+## Coefficients: 
+##                          Estimate Std. Error z value Pr(>|z|)    
+## (Intercept):1           -0.907331   0.086356 -10.507  < 2e-16 ***
+## (Intercept):2            0.396330   0.070752   5.602 2.12e-08 ***
+## (Intercept):3            1.940820   0.087815  22.101  < 2e-16 ***
+## age_group26_39:1        -0.209877   0.081458  -2.576 0.009981 ** 
+## age_group26_39:2        -0.110425   0.064840  -1.703 0.088564 .  
+## age_group26_39:3         0.010784   0.075817   0.142 0.886893    
+## age_group40_65:1        -0.399291   0.080405  -4.966 6.84e-07 ***
+## age_group40_65:2        -0.240885   0.063322  -3.804 0.000142 ***
+## age_group40_65:3         0.004428   0.073970   0.060 0.952262    
+## regionEastern:1         -0.109203   0.274634  -0.398 0.690902    
+## regionEastern:2         -0.255850   0.208104  -1.229 0.218909    
+## regionEastern:3         -0.840398   0.213736  -3.932 8.43e-05 ***
+## regionNordic:1           0.548535   0.124586   4.403 1.07e-05 ***
+## regionNordic:2           0.272029   0.108174   2.515 0.011912 *  
+## regionNordic:3          -0.302483   0.128790  -2.349 0.018841 *  
+## regionSoutheastern:1     0.005392   0.104537   0.052 0.958867    
+## regionSoutheastern:2    -0.507431   0.082082  -6.182 6.33e-10 ***
+## regionSoutheastern:3    -0.792761   0.086340  -9.182  < 2e-16 ***
+## regionSouthern:1        -0.377610   0.082432  -4.581 4.63e-06 ***
+## regionSouthern:2        -0.457863   0.059054  -7.753 8.96e-15 ***
+## regionSouthern:3        -0.621233   0.067804  -9.162  < 2e-16 ***
+## regionWestern:1          0.016697   0.069863   0.239 0.811104    
+## regionWestern:2         -0.130393   0.053780  -2.425 0.015326 *  
+## regionWestern:3         -0.375811   0.065625  -5.727 1.02e-08 ***
+## gendermale:1            -0.243999   0.057475  -4.245 2.18e-05 ***
+## gendermale:2            -0.327019   0.043624  -7.496 6.57e-14 ***
+## gendermale:3            -0.226933   0.049518  -4.583 4.59e-06 ***
+## ruralurban:1            -0.028926   0.061250  -0.472 0.636738    
+## ruralurban:2             0.012807   0.047373   0.270 0.786904    
+## ruralurban:3            -0.081588   0.055409  -1.472 0.140895    
+## dem_education_level.L:1 -0.910586   0.080838 -11.264  < 2e-16 ***
+## dem_education_level.L:2 -0.503250   0.068411  -7.356 1.89e-13 ***
+## dem_education_level.L:3 -0.276324   0.082927  -3.332 0.000862 ***
+## dem_education_level.Q:1 -0.288637   0.073598  -3.922 8.79e-05 ***
+## dem_education_level.Q:2 -0.299150   0.062112  -4.816 1.46e-06 ***
+## dem_education_level.Q:3 -0.224983   0.075388  -2.984 0.002842 ** 
+## dem_education_level.C:1  0.064748   0.089594   0.723 0.469877    
+## dem_education_level.C:2 -0.001765   0.079479  -0.022 0.982286    
+## dem_education_level.C:3 -0.149693   0.098474  -1.520 0.128479    
+## dem_education_level^4:1 -0.065850   0.076253  -0.864 0.387824    
+## dem_education_level^4:2 -0.017320   0.066614  -0.260 0.794865    
+## dem_education_level^4:3 -0.070612   0.082352  -0.857 0.391204    
+## dem_full_time_jobyes:1  -0.099675   0.061456  -1.622 0.104826    
+## dem_full_time_jobyes:2  -0.188871   0.046873  -4.029 5.59e-05 ***
+## dem_full_time_jobyes:3  -0.236203   0.054723  -4.316 1.59e-05 ***
+## dem_has_childrenyes:1   -0.048784   0.064343  -0.758 0.448334    
+## dem_has_childrenyes:2   -0.101937   0.048005  -2.123 0.033716 *  
+## dem_has_childrenyes:3   -0.084465   0.053850  -1.569 0.116759    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Names of linear predictors: logitlink(P[Y<=1]), logitlink(P[Y<=2]), logitlink(P[Y<=3])
+## 
+## Residual deviance: 25320.77 on 28899 degrees of freedom
+## 
+## Log-likelihood: -12660.38 on 28899 degrees of freedom
+## 
+## Number of Fisher scoring iterations: 5 
+## 
+## No Hauck-Donner effect found in any of the estimates
+## 
+## 
+## Exponentiated coefficients:
+##        age_group26_39:1        age_group26_39:2        age_group26_39:3        age_group40_65:1        age_group40_65:2        age_group40_65:3         regionEastern:1         regionEastern:2         regionEastern:3          regionNordic:1          regionNordic:2          regionNordic:3    regionSoutheastern:1    regionSoutheastern:2    regionSoutheastern:3        regionSouthern:1        regionSouthern:2        regionSouthern:3         regionWestern:1         regionWestern:2         regionWestern:3            gendermale:1            gendermale:2            gendermale:3            ruralurban:1            ruralurban:2            ruralurban:3 dem_education_level.L:1 dem_education_level.L:2 dem_education_level.L:3 dem_education_level.Q:1 dem_education_level.Q:2 dem_education_level.Q:3 dem_education_level.C:1 dem_education_level.C:2 dem_education_level.C:3 dem_education_level^4:1 dem_education_level^4:2 dem_education_level^4:3  dem_full_time_jobyes:1  dem_full_time_jobyes:2 
+##               0.8106839               0.8954539               1.0108423               0.6707956               0.7859317               1.0044381               0.8965486               0.7742581               0.4315388               1.7307154               1.3126252               0.7389810               1.0054061               0.6020402               0.4525933               0.6854980               0.6326340               0.5372818               1.0168374               0.8777501               0.6867323               0.7834887               0.7210703               0.7969742               0.9714883               1.0128889               0.9216515               0.4022883               0.6045627               0.7585674               0.7492844               0.7414480               0.7985301               1.0668900               0.9982369               0.8609726               0.9362714               0.9828296               0.9318237               0.9051316               0.8278934 
+##  dem_full_time_jobyes:3   dem_has_childrenyes:1   dem_has_childrenyes:2   dem_has_childrenyes:3 
+##               0.7896206               0.9523865               0.9030863               0.9190036
+```
+
+```r
+anova(mod_po, mod_npo, type=1)
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: awareness ~ age_group + region + gender + rural + dem_education_level + 
+##     dem_full_time_job + dem_has_children
+## Model 2: awareness ~ age_group + region + gender + rural + dem_education_level + 
+##     dem_full_time_job + dem_has_children
+##   Resid. Df Resid. Dev Df Deviance  Pr(>Chi)    
+## 1     28929      25488                          
+## 2     28899      25321 30   167.38 < 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
 
-Since the goal is to see what factors are related to the level of awareness, another way to infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered, based on the mean decrease in Gini coef.
+Since the goal is to see what factors are related to the level of awareness, despite the fact that causal relationship cannot be guaranteed, another way to possibly infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered, based on the mean decrease in Gini coef. 
 
 ```r
 library(randomForest)
@@ -829,13 +979,13 @@ rf$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   64.03918
-## region                     121.40638
-## gender                      39.21982
-## rural                       38.75536
-## dem_education_level        118.93772
-## dem_full_time_job           39.39088
-## dem_has_children            36.22627
+## age_group                   63.76793
+## region                     120.55936
+## gender                      39.27084
+## rural                       38.88011
+## dem_education_level        112.65933
+## dem_full_time_job           39.14415
+## dem_has_children            36.05017
 ```
 
 Based on the importance measures above, education level and region might be related to the level of awareness more than other variables in the dataset. 
@@ -863,35 +1013,6 @@ Since there are many choices for the effects, a multinomial logit model would be
 
 
 ```r
-mod_effect = multinom(effect ~ age_group + gender + rural + region + dem_education_level + dem_full_time_job +  dem_has_children,
-                      data=df, trace=FALSE)
-mod_effect
-```
-
-```
-## Call:
-## multinom(formula = effect ~ age_group + gender + rural + region + 
-##     dem_education_level + dem_full_time_job + dem_has_children, 
-##     data = df, trace = FALSE)
-## 
-## Coefficients:
-##                                (Intercept) age_group26_39 age_group40_65  gendermale  ruralurban regionEastern  regionNordic regionSoutheastern regionSouthern regionWestern dem_education_levelno dem_education_levellow dem_education_levelmedium dem_education_levelhigh dem_full_time_jobyes dem_has_childrenyes
-## do more volunteering work       -0.9593504    -0.35839868     -0.5221405 -0.07680663  0.28519510     0.2772222  0.0005344373        0.303233205      0.2623311    0.23723129            0.17124558           -0.512682381               -0.51316763              -0.6192763          -0.19264730         -0.18973294
-## gain additional skills          -0.7317274     0.07648363     -0.4633992  0.04573123  0.22834161     0.4459720  0.0172769906       -0.036317078     -0.4305239    0.17623571            0.11575434           -0.007651468               -0.20229833              -0.3618546          -0.11179805         -0.34236014
-## look for a different job        -1.2070461    -0.13838798     -0.4951532 -0.04083968  0.10289376     0.6068405 -0.3476427180        0.063987669      0.1978584    0.52885673            0.33843076           -0.354832799               -0.53299419              -0.6869383           0.20879307         -0.10957515
-## None of the above                0.3797631    -0.16468140     -0.3313063  0.01109778 -0.04146981     0.5647496 -0.0445491163       -0.000726233     -0.2154989    0.34518816            0.18147779           -0.686681779               -1.12931939              -1.3856189          -0.32821004         -0.11129495
-## spend more time with my family  -0.4037322    -0.16994711     -0.7436910  0.03483688  0.14393694     0.6688693 -0.3945521890       -0.061937256     -0.3089594    0.04832668            0.05651460           -0.108380463               -0.41683316              -0.5747031           0.07435489          0.42516063
-## stop working                    -1.6864155    -0.31463897     -0.7679944  0.23948594  0.22981665     0.1478993  0.1690415835       -0.416160856     -0.2619736   -0.18578389            0.55211192           -0.047346288               -0.25399099              -0.2592496           0.01902249         -0.04454982
-## work as a freelancer            -1.9618438    -0.11612019     -0.4519677  0.20344939  0.19323875     0.4837884  0.4128772273        0.367590072      0.1233275    0.01841245           -0.05325097            0.093892641                0.09385219               0.3389524          -0.31587922         -0.18796436
-## work less                       -1.2421554    -0.44133454     -0.6948525  0.15633558  0.14005166     0.7117279  0.2749377760       -0.318191389     -0.5338769    0.02513800            0.59743706           -0.141480891               -0.18246775              -0.2789970           0.35625948         -0.10976545
-## 
-## Residual Deviance: 36683.49 
-## AIC: 36939.49
-```
-
-
-
-```r
 explanatory_vars = c("age_group", "region", "gender", "rural", 
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 library(randomForest())
@@ -901,13 +1022,13 @@ rf_effect$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   73.01763
-## region                     110.61747
-## gender                      43.27664
-## rural                       40.20600
-## dem_education_level        109.37243
-## dem_full_time_job           38.95282
-## dem_has_children            38.53826
+## age_group                   72.41056
+## region                     110.35836
+## gender                      43.02948
+## rural                       38.87018
+## dem_education_level        108.36431
+## dem_full_time_job           38.64226
+## dem_has_children            38.46759
 ```
 
 ### 3. Whether there is an association between awareness and whether a person would vote for BI
@@ -917,7 +1038,7 @@ rf_effect$importance
 bar_prop_generator("vote", "awareness", "vote vs awareness")
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
 
 The above plot shows that the more knowledge one has about BI, the more likely he would vote for BI. It cna be inferred from the above plot that the vote and awareness are not independent or homogeneous, let's do Chi square test for independence
 
@@ -951,7 +1072,7 @@ table_awareness_vote = table(df$awareness, df$vote)
 CA(table_awareness_vote)
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-38-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-37-1.png)<!-- -->
 
 ```
 ## **Results of the Correspondence Analysis (CA)**
@@ -988,7 +1109,7 @@ CA(table_awareness_vote)
 bar_prop_generator("effect", "awareness", "vote vs awareness")
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-40-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-39-1.png)<!-- -->
 
 It can be seen that those who says they understand BI tend to have the opinion that BI would not affect their work choices. Based on this observations, people knowledgeable about BI might tend to be more optimistic about the BI's effects.
 
@@ -1014,7 +1135,7 @@ table_awareness_effect = table(df$effect, df$awareness)
 CA(table_awareness_effect)
 ```
 
-![](bi_markdown_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
+![](bi_markdown_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
 
 ```
 ## **Results of the Correspondence Analysis (CA)**

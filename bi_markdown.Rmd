@@ -42,6 +42,7 @@ library(MASS)
 library(nnet)
 library(scales)
 library(GGally)
+library(VGAM)
 ```
 
 ### Import data
@@ -195,7 +196,7 @@ Only education level has missing values. For now, let the missing values for thi
 df$dem_education_level = as.character(df$dem_education_level)
 df$dem_education_level[is.na(df$dem_education_level)] = "unknown"
 df$dem_education_level = factor(df$dem_education_level,
-                                   levels=c("unknown", "no", "low", "medium", "high"))
+                                   levels=c("unknown", "no", "low", "medium", "high"), ordered=TRUE)
 ```
 
 
@@ -210,7 +211,7 @@ df$awareness = df$awareness %>%
     else if(x=="I have heard just a little about it"){return("heard_a_little")}
     else{return("never_heard")}
   }) %>%
-  factor(levels=c("never_heard", "heard_a_little" , "know_something_about_it", "fully_understand" ))
+  factor(levels=c("never_heard", "heard_a_little" , "know_something_about_it", "fully_understand" ), ordered=TRUE)
 ```
 
 #### Vote
@@ -455,15 +456,23 @@ explanatory_vars = c("age_group", "region", "gender", "rural",
                      "dem_education_level", "dem_full_time_job", "dem_has_children")
 output_var = "awareness"
 
-#Prop odds
-mod_po = polr(reg_formula_generator(output_var, explanatory_vars),
-           data=df, Hess=TRUE)
+##Fit models##
+#prop odds
+mod_po = vglm(reg_formula_generator(output_var, explanatory_vars),
+     data=df, family=cumulative(parallel = TRUE))
 
-#Non-prop odds
+#non-prop-odds
+mod_npo = vglm(reg_formula_generator(output_var, explanatory_vars),
+     data=df, family=cumulative())
+
+summary(mod_po)
+summary(mod_npo)
+
+anova(mod_po, mod_npo, type=1)
 ```
 
 
-Since the goal is to see what factors are related to the level of awareness, another way to infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered, based on the mean decrease in Gini coef.
+Since the goal is to see what factors are related to the level of awareness, despite the fact that causal relationship cannot be guaranteed, another way to possibly infer this is to fit a Random Forest classifier and see the importance measure of each explanatory variable considered, based on the mean decrease in Gini coef. 
 ```{r}
 library(randomForest)
 explanatory_vars = c("age_group", "region", "gender", "rural", 
@@ -488,13 +497,6 @@ bar_prop_generator("effect", "dem_education_level", "effect vs age group")
 
 ##### Modelling
 Since there are many choices for the effects, a multinomial logit model would be too complex to interpret. 
-
-```{r}
-mod_effect = multinom(effect ~ age_group + gender + rural + region + dem_education_level + dem_full_time_job +  dem_has_children,
-                      data=df, trace=FALSE)
-mod_effect
-```
-
 
 ```{r}
 explanatory_vars = c("age_group", "region", "gender", "rural", 
