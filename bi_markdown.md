@@ -765,7 +765,7 @@ bar_prop_generator("awareness", "age_group", "awareness vs age group")
 Slightly, people belonging to older age groups seem to tend to be more knowledgeable in BI.
 
 #### Modelling
-Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, AIC can be used as the metric.
+Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, Likelihood ratio test can be used for comparing the models.
 
 ##### Multinomial logit model
 
@@ -979,13 +979,13 @@ rf$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   63.76793
-## region                     120.55936
-## gender                      39.27084
-## rural                       38.88011
-## dem_education_level        112.65933
-## dem_full_time_job           39.14415
-## dem_has_children            36.05017
+## age_group                   63.92106
+## region                     120.73942
+## gender                      39.06537
+## rural                       38.82371
+## dem_education_level        112.59750
+## dem_full_time_job           39.35872
+## dem_has_children            35.87831
 ```
 
 Based on the importance measures above, education level and region might be related to the level of awareness more than other variables in the dataset. 
@@ -1022,13 +1022,13 @@ rf_effect$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   72.41056
-## region                     110.35836
-## gender                      43.02948
-## rural                       38.87018
-## dem_education_level        108.36431
-## dem_full_time_job           38.64226
-## dem_has_children            38.46759
+## age_group                   73.43267
+## region                     112.68672
+## gender                      43.14444
+## rural                       39.40985
+## dem_education_level        106.18290
+## dem_full_time_job           38.77812
+## dem_has_children            38.73170
 ```
 
 ### 3. Whether there is an association between awareness and whether a person would vote for BI

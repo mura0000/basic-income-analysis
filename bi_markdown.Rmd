@@ -440,7 +440,7 @@ bar_prop_generator("awareness", "age_group", "awareness vs age group")
 Slightly, people belonging to older age groups seem to tend to be more knowledgeable in BI.
 
 #### Modelling
-Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, AIC can be used as the metric.
+Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficient for each level only differs by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, Likelihood ratio test can be used for comparing the models.
 
 ##### Multinomial logit model
 ```{r}
