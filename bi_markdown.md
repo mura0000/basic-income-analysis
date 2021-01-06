@@ -757,7 +757,7 @@ bar_prop_generator("awareness", "dem_education_level", "awareness vs education l
 
 ![](bi_markdown_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
-It seems the trend seems overall not that different, and that whether a person lives in a rural area does not confound the relationship between the education level and the level of awareness. For urban resiednts, however, a respondent from an urban area with "no" education level are more likely to not have heard about BI than a same type of respondent from a rural area. 
+It seems that the overall trend seems overall not that different. For urban resiednts, however, a respondent from an urban area with "no" education level is more likely to not have heard about BI than a same type of respondent from a rural area. 
 
 ##### plot vs age group
 
@@ -770,7 +770,7 @@ bar_prop_generator("awareness", "age_group", "awareness vs age group")
 Slightly, people belonging to older age groups seem to tend to be more knowledgeable in BI.
 
 #### Modelling
-Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficients for each of the different response levels only differ by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, Likelihood ratio test can be used for comparing the models.
+Since the level of awareness can be considered an ordered categorical variable, a cumulative logit model can be suitable. The coefficients of the model can be too complex to interpret. One of the possible ways to mitigate this possible problem is to have a proportional odds assumption, in which the coefficients for each of the different response levels only differ by the intercept term. A model with this assumption and without it can be compared based on a certain metric. Since the models are nested, likelihood ratio test can be used for comparing the models.
 
 ##### Multinomial logit model
 
@@ -811,7 +811,7 @@ if(p_val_lrt < 0.00001){
 ## P-value of LRT: < 0.00001
 ```
 
-The output of the above code states that the fit significantly improves by having different slope coefficients for each of the response levels. 
+Based on the above output, the fit significantly improves by having different slope coefficients for each of the response levels. 
 
 The below code's output shows the summary of the non-proportional odds cumulative logit model.
 
@@ -1146,13 +1146,13 @@ rf$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   64.09540
-## region                     121.19713
-## gender                      39.35803
-## rural                       38.85203
-## dem_education_level        118.79390
-## dem_full_time_job           39.46265
-## dem_has_children            36.31352
+## age_group                   63.81400
+## region                     121.48168
+## gender                      38.87000
+## rural                       38.72428
+## dem_education_level        118.47381
+## dem_full_time_job           39.20382
+## dem_has_children            36.00268
 ```
 
 Based on the importance measures above, education level and region might be related to the level of awareness more than other variables in the dataset, which agrees with the results of fitting the cumulative logit model. 
@@ -1193,13 +1193,13 @@ rf_effect$importance
 
 ```
 ##                     MeanDecreaseGini
-## age_group                   72.12705
-## region                     110.99349
-## gender                      43.94190
-## rural                       40.53382
-## dem_education_level        109.78656
-## dem_full_time_job           38.06247
-## dem_has_children            39.52414
+## age_group                   72.79834
+## region                     112.18655
+## gender                      43.00604
+## rural                       39.39426
+## dem_education_level        109.56721
+## dem_full_time_job           39.23939
+## dem_has_children            39.17198
 ```
 
 Based on the importance measure, education level and region seem to be more relevant than other variables.
@@ -1370,11 +1370,9 @@ In order to simplify analysis, the levels for vote can be collapsed into three l
 
 A multinomial logit model will be fit with the reference category "NO". 
 
-Collapsing the categories can lead to some loss of information. However, in the multinomial logit model described above, factors which possibly have a relationship with whether one votes for BI or not can be seen by referring to the coefficients related to the category "YES".
+Collapsing the categories can lead to some loss of information. However, in the multinomial logit model described above, factors which possibly have a relationship with whether one would vote for BI or not can be seen simply by referring to the coefficients related to the category "YES", which would make the analysis simpler than when the categories are not collapsed.
 
-There can be loss of information by doing the above thing. However, by fi
-
-In addition, in order to take account of the possibility of the existence confounding variables, variables related to socio-economic factors, which are used in modelling awareness, are also going to be in the model.
+In addition, in order to take account of the possibility of the existence of confounding variables, variables related to socio-economic factors, which are used in modelling awareness, are also going to be in the model.
 
 
 ```r
